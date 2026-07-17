@@ -1,0 +1,12 @@
+# Direct runtime dependencies.
+# requirements.txt is generated from this file with exact transitive versions
+# and SHA-256 hashes for Windows x86_64 + Python 3.12.
+faster-whisper==1.2.1
+ctranslate2==4.7.1
+nvidia-cublas-cu12==12.9.2.10
+nvidia-cudnn-cu12==9.20.0.48
+nvidia-cuda-nvrtc-cu12==12.9.86
+sounddevice==0.5.5
+numpy==2.4.4
+pyperclip==1.11.0
+PyAutoGUI==0.9.54

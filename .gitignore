@@ -1,0 +1,26 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Downloaded model cache (about 3 GB for large-v3)
+models/
+
+# Local editor / agent state
+.claude/
+.codex/
+.agents/
+.idea/
+.vscode/
+
+# Local environment and logs
+.env
+.env.*
+*.log
+desktop.ini
+Thumbs.db
