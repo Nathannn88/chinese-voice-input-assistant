@@ -324,7 +324,7 @@ def record_and_transcribe():
     for pattern, repl in HOTWORD_FIXES:
         text = re.sub(pattern, repl, text)
 
-    print(f"[完成] 已转写并粘贴 {len(text)} 个字符")
+    print(f"[完成] {text}")
 
     # 保存剪贴板 → 粘贴转写结果 → 恢复剪贴板
     old_clip = pyperclip.paste()
