@@ -6,20 +6,45 @@ from __future__ import annotations
 import os
 import platform
 import sys
-from pathlib import Path
 
+from audio_settings import AUDIO_DTYPE, CHANNELS, SAMPLE_RATE
+from nvidia_runtime import configure_nvidia_dll_search
 
 EXPECTED_PYTHON = (3, 12)
-DLL_PACKAGES = (
-    "nvidia/cublas/bin",
-    "nvidia/cudnn/bin",
-    "nvidia/cuda_nvrtc/bin",
-)
 
 
 def fail(message: str) -> None:
     print(f"[失败] {message}")
     raise SystemExit(1)
+
+
+def verify_default_input(sounddevice):
+    """验证主程序使用的默认输入设备和精确录音格式。"""
+    try:
+        input_devices = [
+            device["name"]
+            for device in sounddevice.query_devices()
+            if device["max_input_channels"] > 0
+        ]
+        if not input_devices:
+            fail("没有检测到可用的麦克风输入设备。")
+
+        default_input_index = sounddevice.default.device[0]
+        default_input = sounddevice.query_devices(default_input_index, "input")
+        sounddevice.check_input_settings(
+            device=default_input_index,
+            samplerate=SAMPLE_RATE,
+            channels=CHANNELS,
+            dtype=AUDIO_DTYPE,
+        )
+    except SystemExit:
+        raise
+    except Exception as exc:  # noqa: BLE001 - PortAudio raises backend-specific errors
+        fail(
+            "默认麦克风不支持主程序录音格式 "
+            f"{SAMPLE_RATE} Hz / {CHANNELS} channel / {AUDIO_DTYPE}：{exc}"
+        )
+    return input_devices, default_input
 
 
 def main() -> None:
@@ -33,18 +58,10 @@ def main() -> None:
     if platform.architecture()[0] != "64bit":
         fail("需要 64 位 Python。")
 
-    site_packages = Path(sys.prefix) / "Lib" / "site-packages"
-    dll_handles = []
-    missing_dll_dirs = []
-    for relative_path in DLL_PACKAGES:
-        dll_dir = site_packages / Path(relative_path)
-        if dll_dir.is_dir():
-            dll_handles.append(os.add_dll_directory(str(dll_dir)))
-        else:
-            missing_dll_dirs.append(str(dll_dir))
-
-    if missing_dll_dirs:
-        fail("缺少 NVIDIA 运行库目录：\n  " + "\n  ".join(missing_dll_dirs))
+    try:
+        dll_handles = configure_nvidia_dll_search()
+    except FileNotFoundError as exc:
+        fail(str(exc))
 
     try:
         import ctranslate2
@@ -53,7 +70,7 @@ def main() -> None:
         import pyautogui
         import pyperclip
         import sounddevice
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - every dependency import is an explicit check
         fail(f"依赖导入失败：{exc}")
 
     cuda_devices = ctranslate2.get_cuda_device_count()
@@ -68,18 +85,10 @@ def main() -> None:
     if "float16" not in compute_types:
         fail("当前 GPU/CUDA 环境不支持 float16。")
 
-    try:
-        input_devices = [
-            device["name"]
-            for device in sounddevice.query_devices()
-            if device["max_input_channels"] > 0
-        ]
-    except Exception as exc:
-        fail(f"无法查询录音设备：{exc}")
-
+    input_devices, default_input = verify_default_input(sounddevice)
     print(f"[录音] 检测到 {len(input_devices)} 个输入设备")
-    if not input_devices:
-        fail("没有检测到可用的麦克风输入设备。")
+    print(f"[录音] 默认设备：{default_input['name']}")
+    print(f"[录音] 已验证：{SAMPLE_RATE} Hz / 单声道 / {AUDIO_DTYPE}")
 
     # 防止静态分析器把导入误判为未使用；这些导入本身就是检查目标。
     _ = (numpy, pyautogui, pyperclip, dll_handles)

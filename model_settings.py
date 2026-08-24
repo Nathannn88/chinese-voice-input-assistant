@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_SIZE = "large-v3"
 MODEL_REPOSITORY = "Systran/faster-whisper-large-v3"

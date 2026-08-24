@@ -28,7 +28,7 @@
 - NVIDIA RTX 显卡，并安装较新的 NVIDIA 驱动；
 - 可用麦克风；
 - 首次安装和首次下载模型时需要网络；
-- 建议至少预留 6 GB 磁盘空间。
+- 建议在项目所在磁盘至少预留 16 GB；安装完成并清理临时下载后通常占用约 11 GB。
 
 已验证环境：
 
@@ -85,14 +85,33 @@ cd <仓库目录>
 
 脚本会：
 
-1. 优先使用 [uv](https://docs.astral.sh/uv/) 创建精确的 Python 3.12.12 环境；
-2. 如果没有 uv，则尝试使用 Windows Python Launcher 中的 Python 3.12；
-3. 根据带 SHA-256 哈希的锁定文件安装 faster-whisper、CTranslate2、
-   NVIDIA CUDA 运行库及固定的传递依赖；
-4. 检查 CUDA 设备、float16 支持和麦克风；
-5. 下载固定 revision 的 Whisper large-v3，并实际加载到 CUDA float16 验证。
+1. 由 `bootstrap_runtime.ps1` 从固定 GitHub Release 下载 uv 0.12.5，校验
+   压缩包/可执行文件 SHA-256、文件清单和版本后原子替换到 `.runtime/uv/`，
+   不执行远程安装脚本，也不修改系统或用户 PATH；
+2. 把精确的 Python 3.12.12 安装到项目 `.runtime/python/`，再创建 `venv/`；
+3. 先从独立哈希锁安装 setuptools/wheel，再以 `--no-build-isolation` 根据完整
+   运行锁安装 faster-whisper、CTranslate2、NVIDIA CUDA 运行库及固定传递依赖；
+4. 检查 CUDA 设备、float16 支持和默认麦克风是否支持 16000 Hz/单声道/float32；
+5. 下载固定 revision 的 Whisper large-v3，加载到 CUDA float16，并执行一次真实推理验证 cuBLAS 延迟加载。
 
-如果电脑既没有 uv，也没有 Python 3.12，建议先安装 uv，然后重新双击脚本。
+不需要预先安装系统 Python、Python Launcher 或全局 uv。uv、Python、安装临时文件、
+Hugging Face 元数据和 CUDA 缓存都保存在项目目录；重装 Windows 后只需重新运行脚本。
+
+如果维护者使用 `.runtime\uv\uvx.exe` 临时运行 Ruff、Bandit 等工具，也应先把
+`UV_PYTHON_INSTALL_DIR` 设为项目 `.runtime\python`、把 `UV_CACHE_DIR` 设为项目
+`.cache\uv`，避免 uvx 默认把工具运行时 Python 下载到 `%APPDATA%\uv\python`。
+
+项目内存储布局：
+
+| 目录 | 内容 |
+|---|---|
+| `.runtime/uv/` | 固定版 uv 可执行文件 |
+| `.runtime/python/` | uv 管理的 Python 3.12.12 |
+| `venv/` | Python 依赖与 NVIDIA CUDA/cuDNN 运行库 |
+| `models/` | 固定 revision 的 Whisper large-v3 |
+| `.cache/` | 安装临时文件、uv/Hugging Face/CUDA 缓存 |
+
+以上目录均被 Git 忽略。Windows 桌面快捷方式本身仍位于用户桌面，但只占数 KB。
 
 ### 3. 启动
 
@@ -170,8 +189,14 @@ venv\Scripts\python.exe prepare_model.py
 - `requirements.constraints.txt` 固定本机实测过的完整传递依赖版本；
 - `requirements.txt` 锁定 Windows x86_64 + Python 3.12 的完整传递依赖和
   SHA-256 哈希；
+- `requirements.build.in` 与 `requirements.build.txt` 单独固定
+  `setuptools==70.2.0` 和 `wheel==0.45.1`，构建工具只接受锁中的 wheel；
 - `安装环境.bat` 固定使用官方 PyPI，并通过 `--require-hashes` 验证每个
-  wheel 或源码包的下载产物；
+  wheel 或源码包的下载产物；运行依赖安装固定使用 `--no-build-isolation`，
+  禁止 PEP 517 另建环境下载未锁定构建依赖；
+- 安装脚本固定使用项目内 uv 0.12.5 和 Python 3.12.12；不读取系统 Python，
+  也不执行全局 `pip install`；
+- pip 持久缓存被禁用，安装临时目录被重定向到项目 `.cache/`，成功后清理；
 - CTranslate2 直接负责 GPU 推理，不需要 PyTorch、FunASR 或 ModelScope。
 
 维护者更新 `requirements.in` 后，应重新生成锁定文件：
@@ -179,6 +204,12 @@ venv\Scripts\python.exe prepare_model.py
 ```cmd
 uv pip compile requirements.in --constraint requirements.constraints.txt --python-platform x86_64-pc-windows-msvc --python-version 3.12 --generate-hashes --emit-index-url --output-file requirements.txt
 ```
+
+uv 引导包固定为
+`uv-x86_64-pc-windows-msvc.zip`，压缩包 SHA-256 为
+`4c4d49d8738847d9b71ba319e49a5688c93eac0fe6204b1df24e98528dddf39a`，
+`uv.exe` SHA-256 为
+`8da6cedef60c27ac997ebf400fbfc6d373c5b0a7ae6a299b9d52be7fe63723fb`。
 
 ## 速度参考
 
@@ -220,10 +251,13 @@ RTX 5090、`beam_size=3` 的本机经验值：
 
 ## 仓库中为什么没有模型和 venv
 
-本地完整目录约 9 GB，其中模型和虚拟环境都是可重新生成的机器产物，不适合提交 Git：
+本地完整目录通常约 11 GB，其中运行时、模型和虚拟环境都是可重新生成的机器产物，
+不适合提交 Git：
 
+- `.runtime/` 由 `安装环境.bat` 下载固定版 uv 和 Python 3.12.12；
 - `venv/` 由 `安装环境.bat` 重建；
 - `models/` 在首次启动时按固定 revision 下载；
+- `.cache/` 保存项目内临时文件和运行缓存；
 - `.claude/`、`.codex/` 等本地 AI 配置也不会上传。
 
 仓库只保存复刻所需的源码、固定依赖、安装脚本、环境检查与说明文档。

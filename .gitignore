@@ -1,6 +1,8 @@
 # Python
 venv/
 .venv/
+.runtime/
+.cache/
 __pycache__/
 *.py[cod]
 *.pyd
@@ -12,6 +14,7 @@ __pycache__/
 models/
 
 # Local editor / agent state
+.agent/
 .claude/
 .codex/
 .agents/

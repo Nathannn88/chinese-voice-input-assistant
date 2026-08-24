@@ -1,0 +1,3 @@
+# Build tools installed before runtime dependencies.
+setuptools==70.2.0
+wheel==0.45.1

@@ -4,31 +4,26 @@
 按住右 Ctrl 键录音，松开后自动转文字并粘贴到光标位置
 """
 
-import threading
-import time
-import sys
-import os
+import atexit
 import ctypes
 import queue
-import atexit
 import re
+import sys
+import threading
+import time
 from ctypes import wintypes
+from dataclasses import dataclass, field
 
+from audio_settings import AUDIO_DTYPE, CHANNELS, SAMPLE_RATE
 from model_settings import MODEL_DIR, MODEL_REVISION, MODEL_SIZE
+from nvidia_runtime import configure_nvidia_dll_search
 
 # ── 配置 ──────────────────────────────────────────
-SAMPLE_RATE = 16000
 LANGUAGE    = None   # None=自动检测，支持中英混合
 
-# faster-whisper / CTranslate2 在 Windows 上需要找到 pip 安装的 NVIDIA DLL。
-# 使用 sys.prefix 而不是写死项目内的 venv 路径，便于从任意虚拟环境启动。
-_dll_handles = []
-site_packages = os.path.join(sys.prefix, "Lib", "site-packages")
-if os.name == "nt":
-    for _pkg in ("nvidia/cublas/bin", "nvidia/cudnn/bin", "nvidia/cuda_nvrtc/bin"):
-        _dll_dir = os.path.join(site_packages, _pkg.replace("/", os.sep))
-        if os.path.isdir(_dll_dir):
-            _dll_handles.append(os.add_dll_directory(_dll_dir))
+# CTranslate2 会在录音线程中延迟加载 cuBLAS；除保留 DLL directory 句柄外，
+# 还需把项目 NVIDIA bin 目录前置到进程 PATH，供跨线程 LoadLibrary 使用。
+_dll_handles = configure_nvidia_dll_search()
 
 # 常见误识别修正（正则 → 正确写法，按需添加）
 HOTWORD_FIXES = [
@@ -40,9 +35,9 @@ HOTWORD_FIXES = [
 # ─────────────────────────────────────────────────
 
 import numpy as np
-import sounddevice as sd
-import pyperclip
 import pyautogui
+import pyperclip
+import sounddevice as sd
 
 # ── 单实例保护（防止多个进程同时挂钩导致输入冻结） ──
 _mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "VoiceAssistant_SingleInstance")
@@ -151,9 +146,8 @@ def _mouse_hook_callback(nCode, wParam, lParam):
                     _action_queue.put('start')
                 elif button_id == XBUTTON2:
                     _action_queue.put('enter')
-            elif wParam == WM_XBUTTONUP:
-                if button_id == XBUTTON1:
-                    _action_queue.put('stop')
+            elif wParam == WM_XBUTTONUP and button_id == XBUTTON1:
+                _action_queue.put('stop')
             return 1   # 吞噬：浏览器不收到前进/后退
 
     return _user32.CallNextHookEx(_mouse_hook_id, nCode, wParam, lParam)
@@ -217,27 +211,46 @@ def _run_hooks():
         _kbd_hook_id = None
 
 
+def _dispatch_action(action):
+    """分发单个动作；未知动作只报告，不终止 worker。"""
+    if action == "start":
+        _start_recording()
+    elif action == "stop":
+        _stop_recording()
+    elif action == "enter":
+        pyautogui.press("enter")
+    elif action == "screenshot":
+        pyautogui.hotkey("ctrl", "1")
+    else:
+        print(f"[错误] 未知动作：{action!r}")
+
+
 def _action_worker():
-    """消费 _action_queue，执行实际的录音/Enter 操作。
-    与钩子线程解耦，保证钩子回调能立即返回。"""
+    """消费动作队列；单次动作失败后继续处理下一项。"""
     while True:
         action = _action_queue.get()
-        if action == 'start':
-            _start_recording()
-        elif action == 'stop':
-            _stop_recording()
-        elif action == 'enter':
-            pyautogui.press("enter")
-        elif action == 'screenshot':
-            pyautogui.hotkey("ctrl", "1")
+        try:
+            _dispatch_action(action)
+        except Exception as exc:  # noqa: BLE001 - worker must survive one failed action
+            print(f"[错误] 动作 {action!r} 执行失败：{exc}")
 # ──────────────────────────────────────────────────────────────────────────
 
 model       = None
 model_ready = threading.Event()
 model_load_finished = threading.Event()
 model_load_error = None
-recording   = False
-stop_event  = threading.Event()
+
+
+@dataclass
+class RecordingSession:
+    """一次录音处理独占的停止信号与后台线程。"""
+
+    stop_event: threading.Event = field(default_factory=threading.Event)
+    thread: threading.Thread | None = None
+
+
+_recording_lock = threading.Lock()
+_active_session: RecordingSession | None = None
 
 
 def load_model():
@@ -254,19 +267,19 @@ def load_model():
         )
         model_ready.set()
         print("[模型] Whisper large-v3 加载完成")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - isolate third-party model load failures
         model_load_error = exc
         print(f"[错误] 模型加载失败：{exc}")
     finally:
         model_load_finished.set()
 
 
-_WHISPER_COMMON = dict(
-    beam_size=3,          # 平衡速度与准确率
-    initial_prompt="以下是中英混合的对话，使用简体中文和英语。",
-    vad_filter=False,     # 手动按键控制边界，VAD 多余且会误裁开头/结尾
-    condition_on_previous_text=False,
-)
+_WHISPER_COMMON = {
+    "beam_size": 3,  # 平衡速度与准确率
+    "initial_prompt": "以下是中英混合的对话，使用简体中文和英语。",
+    "vad_filter": False,  # 手动按键控制边界，VAD 多余且会误裁开头/结尾
+    "condition_on_previous_text": False,
+}
 
 def _transcribe(audio):
     segments, info = model.transcribe(audio, language=LANGUAGE, **_WHISPER_COMMON)
@@ -277,17 +290,20 @@ def _transcribe(audio):
     return "".join(seg.text for seg in segments).strip()
 
 
-def record_and_transcribe():
+def _record_and_transcribe(session):
     frames = []
-    stop_event.clear()
     print("[录音中] …")
 
     try:
-        with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32") as stream:
-            while not stop_event.is_set():
+        with sd.InputStream(
+            samplerate=SAMPLE_RATE,
+            channels=CHANNELS,
+            dtype=AUDIO_DTYPE,
+        ) as stream:
+            while not session.stop_event.is_set():
                 data, _ = stream.read(512)
                 frames.append(data.copy())
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - sounddevice exposes backend-specific errors
         print(f"[错误] 录音失败: {e}")
         return
 
@@ -312,7 +328,7 @@ def record_and_transcribe():
 
     try:
         text = _transcribe(audio)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - transcription backend errors vary by driver
         print(f"[错误] 识别失败: {e}")
         return
 
@@ -337,34 +353,65 @@ def record_and_transcribe():
         pyperclip.copy(old_clip)
 
 
+def _release_session(session):
+    global _active_session
+    with _recording_lock:
+        if _active_session is session:
+            _active_session = None
+
+
+def record_and_transcribe(session):
+    """录音、识别并粘贴；无论哪一步失败都释放当前 session。"""
+    try:
+        _record_and_transcribe(session)
+    except Exception as exc:  # noqa: BLE001 - always release session after pipeline failure
+        print(f"[错误] 录音处理失败：{exc}")
+    finally:
+        _release_session(session)
+
+
 def _start_recording():
-    global recording
-    if not recording:
+    global _active_session
+    with _recording_lock:
+        if _active_session is not None:
+            print("[提示] 上一段录音仍在处理中，本次触发已忽略。")
+            return
         if not model_ready.is_set():
             print("[提示] 模型加载中，请稍候…")
             return
-        recording = True
-        stop_event.clear()
-        threading.Thread(target=record_and_transcribe, daemon=True).start()
+
+        session = RecordingSession()
+        session.thread = threading.Thread(
+            target=record_and_transcribe,
+            args=(session,),
+            daemon=True,
+        )
+        _active_session = session
+        try:
+            session.thread.start()
+        except Exception:
+            if _active_session is session:
+                _active_session = None
+            raise
 
 
 def _stop_recording():
-    global recording
-    if recording:
-        recording = False
-        stop_event.set()
+    with _recording_lock:
+        session = _active_session
+        if session is not None:
+            session.stop_event.set()
 
 
 def main():
     pyautogui.FAILSAFE = False
 
     print("=" * 50)
-    print(f"  中文语音转文字助手")
-    print(f"  触发键 : 右 Ctrl / 鼠标侧键(后退)")
-    print(f"  前进键 : 鼠标侧键(前进) → Enter")
-    print(f"  中键   : 鼠标中键 → Ctrl+1（截图）")
+    print("  中文语音转文字助手")
+    print("  触发键 : 右 Ctrl / 鼠标侧键(后退)")
+    print("  前进键 : 鼠标侧键(前进) → Enter")
+    print("  中键   : 鼠标中键 → Ctrl+1（截图）")
     print(f"  模型   : Whisper {MODEL_SIZE} (GPU float16)")
-    print(f"  语言   : 自动检测（中/英）")
+    print("  语言   : 自动检测（中/英）")
     print("  用法   : 按住触发键说话，松开自动粘贴")
     print("  注意   : 触发键已被完全接管，不触发任何原始功能")
     print("  退出   : Ctrl+C（左Ctrl+C）")
@@ -393,6 +440,7 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n[退出] 正在清理钩子…")
+        _stop_recording()
         _cleanup_hooks()
         time.sleep(0.3)
         sys.exit(0)

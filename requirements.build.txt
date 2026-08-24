@@ -1,0 +1,8 @@
+# Build tools for Windows x86_64 + Python 3.12.
+# Install with --require-hashes --only-binary=:all: before requirements.txt.
+--index-url https://pypi.org/simple
+
+setuptools==70.2.0 \
+    --hash=sha256:b8b8060bb426838fbe942479c90296ce976249451118ef566a5a0b7d8b78fb05
+wheel==0.45.1 \
+    --hash=sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248
