@@ -1,0 +1,24 @@
+#AOCI-CODE-VOLUME: 1
+
+===D:/保存文件/claude库/中文语音转文字助手/===
+.python-version[FC5T]: F:固定项目 Python 版本为3.12.12 | R:code:安装环境.bat,code:verify_local_install.py | A:uv Python版本选择 | S:-
+audio_settings.py[CH6T]: F:共享16kHz、单声道、float32录音参数 | R:code:main.py,code:verify_environment.py,code:prepare_model.py | A:SAMPLE_RATE;CHANNELS;AUDIO_DTYPE | S:-
+bootstrap_runtime.ps1[OV8M]: F:在项目内验证或原子替换固定版本uv运行工具 | R:code:安装环境.bat,code:verify_local_install.py,code:tests/test_bootstrap_runtime.py | A:Install-VerifiedUv;Assert-SafeDirectory;Assert-UvArchiveLayout | S:压缩包与exe分别校验固定SHA256；仅允许三个工具文件；拒绝reparse和越界；新版本验证后才替换，失败恢复旧工具；Windows PowerShell5.1需UTF8 BOM
+main.py[EU9L]: F:将全局键鼠动作编排为录音、GPU转写和当前光标粘贴 | R:code:audio_settings.py,code:model_settings.py,code:nvidia_runtime.py,code:tests/test_main_recording.py | A:main;load_model;_action_worker;RecordingSession;record_and_transcribe | S:钩子只投递队列；模型就绪后挂钩；仅加载本地CUDA float16模型；处理中拒绝新录音；停止信号绑定会话；finally恢复文本剪贴板并释放会话，退出卸钩
+model_settings.py[FC7T]: F:固定Whisper仓库、revision及项目内模型缓存位置 | R:code:main.py,code:prepare_model.py | A:MODEL_SIZE;MODEL_REPOSITORY;MODEL_REVISION;MODEL_DIR | S:准备脚本和运行时必须使用同一revision，主程序禁止临时下载替代模型
+nvidia_runtime.py[RH7T]: F:配置虚拟环境内NVIDIA DLL搜索路径并返回保活句柄 | R:code:main.py,code:prepare_model.py,code:verify_environment.py,code:tests/test_nvidia_runtime.py | A:configure_nvidia_dll_search | S:路径取自sys.prefix；缺目录先失败再改PATH；调用方需保活返回句柄，跨线程延迟加载还依赖进程PATH
+prepare_model.py[OH7T]: F:下载固定Whisper模型并验证GPU加载及静音推理 | R:code:model_settings.py,code:nvidia_runtime.py,code:audio_settings.py,code:安装环境.bat | A:main;WhisperModel;model.transcribe | S:真实消费segments触发推理；要求cuda与float16；不安装键鼠钩子、不录音或发送按键
+requirements.build.in[FV5T]: F:声明先于运行依赖安装的固定构建工具版本 | R:code:安装环境.bat,code:verify_local_install.py,code:tests/test_dependency_locks.py | A:setuptools70.2.0;wheel0.45.1 | S:-
+requirements.constraints.txt[FV6T]: F:保存Windows x64及Python3.12.12实测的传递依赖版本 | R:code:requirements.in,code:安装环境.bat | A:完整传递版本约束 | S:版本约束用于重建哈希锁，不能直接代替带SHA256的安装锁文件
+requirements.in[FV7T]: F:声明Whisper、CUDA运行库、录音与桌面输入直接依赖 | R:code:requirements.constraints.txt,code:安装环境.bat,code:nvidia_runtime.py | A:faster-whisper;ctranslate2;NVIDIA运行库;sounddevice;PyAutoGUI | S:运行后端为CTranslate2；依赖更新需重建完整哈希锁，安装保留require-hashes和no-build-isolation
+verify_environment.py[TH7S]: F:检查Windows64位Python、CUDA float16依赖与默认麦克风格式 | R:code:audio_settings.py,code:nvidia_runtime.py,code:安装环境.bat,code:tests/test_environment_validation.py | A:main;verify_default_input | S:检查主程序的默认输入设备与精确音频格式；不会加载模型、录音或安装钩子；无GPU直接失败
+verify_local_install.py[TV7M]: F:校验精确工具版本、uv哈希及项目内解释器和缓存布局 | R:code:bootstrap_runtime.ps1,code:安装环境.bat,code:tests/test_environment_validation.py | A:validate_managed_path;validate_uv;validate_environment_path;main | S:解释器必须来自本项目venv与.runtime/python；缓存变量逐段拒绝reparse；strict-user-cleanup额外要求已知用户级工具目录不存在
+启动_whisper.bat[OU6T]: F:设置本地缓存环境并在有效venv中启动语音助手 | R:code:安装环境.bat,code:main.py | A:install_environment;run_assistant | S:启动main会接管全局键鼠输入；缺少或外部来源venv时先运行安装流程
+安装环境.bat[OV8S]: F:编排项目内工具链、哈希依赖、GPU模型和布局六阶段安装 | R:code:bootstrap_runtime.ps1,code:verify_environment.py,code:prepare_model.py,code:verify_local_install.py,code:requirements.in | A:uv校验→venv→构建锁→运行锁→GPU→模型→布局 | S:固定Python3.12.12；构建工具先装，运行依赖禁止build isolation；任何阶段失败即退出；缓存清理失败也不得报告成功
+
+===D:/保存文件/claude库/中文语音转文字助手/tests/===
+test_bootstrap_runtime.py[TV6S]: F:验证本地uv安装的供应链、路径与失败回滚边界 | R:code:bootstrap_runtime.ps1 | A:BootstrapRuntimeTests;run_bootstrap;run_layout_check | S:使用真实PowerShell5.1从磁盘执行，内存UTF8解析不能替代此检查
+test_dependency_locks.py[TV6S]: F:检查构建和运行哈希锁及安装顺序、错误哈希拒绝行为 | R:code:requirements.build.in,code:requirements.in,code:安装环境.bat | A:DependencyLockTests | S:错误哈希案例使用本地伪wheel和no-index，必须在安装前拒绝
+test_environment_validation.py[TH6S]: F:模拟验证默认麦克风格式、项目缓存边界和构建版本 | R:code:verify_environment.py,code:verify_local_install.py,code:audio_settings.py | A:FakeSoundDevice;EnvironmentValidationTests;LocalInstallValidationTests | S:模拟设备只证明校验逻辑，不证明本机麦克风或GPU可用
+test_main_recording.py[TU7M]: F:验证录音会话竞态、失败释放及动作worker持续处理 | R:code:main.py | A:RecordingStateTests;ActionWorkerTests;FakeInputStream;DummyThread | S:导入main仍涉及Windows运行环境；用mock替代录音、转写和粘贴，不能据此声称真实桌面输入已验收
+test_nvidia_runtime.py[TH6T]: F:验证NVIDIA目录前置、去重、句柄返回与缺目录拒绝 | R:code:nvidia_runtime.py | A:NvidiaRuntimeTests | S:模拟add_dll_directory不验证真实CUDA推理

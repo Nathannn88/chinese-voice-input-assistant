@@ -256,7 +256,7 @@ RTX 5090、`beam_size=3` 的本机经验值：
 
 - `.runtime/` 由 `安装环境.bat` 下载固定版 uv 和 Python 3.12.12；
 - `venv/` 由 `安装环境.bat` 重建；
-- `models/` 在首次启动时按固定 revision 下载；
+- `models/` 由 `安装环境.bat` 按固定 revision 下载；启动时只读取本地缓存；
 - `.cache/` 保存项目内临时文件和运行缓存；
 - `.claude/`、`.codex/` 等本地 AI 配置也不会上传。
 

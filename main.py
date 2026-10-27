@@ -264,6 +264,7 @@ def load_model():
             compute_type="float16",
             download_root=MODEL_DIR,
             revision=MODEL_REVISION,
+            local_files_only=True,
         )
         model_ready.set()
         print("[模型] Whisper large-v3 加载完成")

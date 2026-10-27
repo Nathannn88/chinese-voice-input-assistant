@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "created_at": "2026-10-08T21:37:32Z",
+  "updated_at": "2026-10-08T21:47:19Z",
+  "files": {
+    ".python-version": {
+      "role": "index",
+      "sha256": "f01d748a75eb195e6fd73201279bfb23f09036ddd360eb3e9ff40ef042acbc8a",
+      "size": 8,
+      "normalized_sha256": "f01d748a75eb195e6fd73201279bfb23f09036ddd360eb3e9ff40ef042acbc8a"
+    },
+    "AGENTS.md": {
+      "role": "observe",
+      "sha256": "d23654bddce6f7eaad55d50dd0fa4327a0dd4622c2303e22be2ba3126250035b",
+      "size": 20348,
+      "normalized_sha256": "d23654bddce6f7eaad55d50dd0fa4327a0dd4622c2303e22be2ba3126250035b"
+    },
+    "CLAUDE.md": {
+      "role": "observe",
+      "sha256": "5fedc84b4e19566b4fe05d54f17e0d8f935441e93c6bbf2a47c322c22cf78ee9",
+      "size": 7546,
+      "normalized_sha256": "5fedc84b4e19566b4fe05d54f17e0d8f935441e93c6bbf2a47c322c22cf78ee9"
+    },
+    "README.md": {
+      "role": "observe",
+      "sha256": "8830a9e85ef4ad1c369fe8737aa18b67a87910c43767ba30c62aa7dc3eb58267",
+      "size": 10728,
+      "normalized_sha256": "8830a9e85ef4ad1c369fe8737aa18b67a87910c43767ba30c62aa7dc3eb58267"
+    },
+    "WORKBUDDY.md": {
+      "role": "observe",
+      "sha256": "607713eed5e00f921371d70b10b4deea26cb14d4a7047ffa70f6060a20aba3b6",
+      "size": 539,
+      "normalized_sha256": "607713eed5e00f921371d70b10b4deea26cb14d4a7047ffa70f6060a20aba3b6"
+    },
+    "aoci.code.txt": {
+      "role": "index",
+      "sha256": "a3540c78157df0b994daba64ac52bed11129e0d861b57a7b8f7feae3472fad43",
+      "size": 6139,
+      "normalized_sha256": "a3540c78157df0b994daba64ac52bed11129e0d861b57a7b8f7feae3472fad43"
+    },
+    "aoci.meta.txt": {
+      "role": "index",
+      "sha256": "fbc304fa05182547e96f1f8404c7c30ad6c366bba9589523f1019c2c1da0427c",
+      "size": 1989,
+      "normalized_sha256": "fbc304fa05182547e96f1f8404c7c30ad6c366bba9589523f1019c2c1da0427c"
+    },
+    "aoci.txt": {
+      "role": "index",
+      "sha256": "9f5d580dc142babd2b1c7fdacfe6f3d9afe33af7e1f5b50c75c859fe9df81594",
+      "size": 316,
+      "normalized_sha256": "9f5d580dc142babd2b1c7fdacfe6f3d9afe33af7e1f5b50c75c859fe9df81594"
+    },
+    "audio_settings.py": {
+      "role": "index",
+      "sha256": "9ea2b1cf0c8b65ee8bbb2f2f027c221dc24aa27388971007632b2aa3881fa91a",
+      "size": 106,
+      "normalized_sha256": "9ea2b1cf0c8b65ee8bbb2f2f027c221dc24aa27388971007632b2aa3881fa91a"
+    },
+    "bootstrap_runtime.ps1": {
+      "role": "index",
+      "sha256": "0690d3133ee76dec24fc0f87d9f361f2c1b3f7b3db842943814123d0dc19bf20",
+      "size": 9241,
+      "normalized_sha256": "0690d3133ee76dec24fc0f87d9f361f2c1b3f7b3db842943814123d0dc19bf20"
+    },
+    "main.py": {
+      "role": "index",
+      "sha256": "a0cb14612624a6dcc924e530d537527ff00d4a2cecbb5e344934085ddec30431",
+      "size": 16056,
+      "normalized_sha256": "a0cb14612624a6dcc924e530d537527ff00d4a2cecbb5e344934085ddec30431"
+    },
+    "model_settings.py": {
+      "role": "index",
+      "sha256": "89d53fe8af10ec98de9ca92bb3fbbd41af4f9b140fe9ce05fffe49452fad1015",
+      "size": 355,
+      "normalized_sha256": "89d53fe8af10ec98de9ca92bb3fbbd41af4f9b140fe9ce05fffe49452fad1015"
+    },
+    "nvidia_runtime.py": {
+      "role": "index",
+      "sha256": "72cfec3925a3a466981c2e74ff53a6897ce9b71e7fee13eeb7afb0daf74edc21",
+      "size": 1299,
+      "normalized_sha256": "72cfec3925a3a466981c2e74ff53a6897ce9b71e7fee13eeb7afb0daf74edc21"
+    },
+    "prepare_model.py": {
+      "role": "index",
+      "sha256": "0e412d6d93af93e0f9e6d8b376df64110d10cc142dee8308c5f0b4bccc825bf9",
+      "size": 2212,
+      "normalized_sha256": "0e412d6d93af93e0f9e6d8b376df64110d10cc142dee8308c5f0b4bccc825bf9"
+    },
+    "requirements.build.in": {
+      "role": "index",
+      "sha256": "4f2a9941e559a9b4e4f92e04a64738c1e8851803432384c7eda6b8743320e02c",
+      "size": 86,
+      "normalized_sha256": "4f2a9941e559a9b4e4f92e04a64738c1e8851803432384c7eda6b8743320e02c"
+    },
+    "requirements.build.txt": {
+      "role": "observe",
+      "sha256": "f01feae3ece53056b6b548de0fbfa9b059afcf61fcfa73b8f949a78d9d3ba54d",
+      "size": 365,
+      "normalized_sha256": "f01feae3ece53056b6b548de0fbfa9b059afcf61fcfa73b8f949a78d9d3ba54d"
+    },
+    "requirements.constraints.txt": {
+      "role": "index",
+      "sha256": "6960920ff2e8cef6e3b5e68b73ce58d71cf2c18485fab73b31cee2368a656ff0",
+      "size": 910,
+      "normalized_sha256": "6960920ff2e8cef6e3b5e68b73ce58d71cf2c18485fab73b31cee2368a656ff0"
+    },
+    "requirements.in": {
+      "role": "index",
+      "sha256": "62ddb31d7d9a988f68aef5797e334db7b56c1200220a0e0d1663e7120d33f09f",
+      "size": 364,
+      "normalized_sha256": "62ddb31d7d9a988f68aef5797e334db7b56c1200220a0e0d1663e7120d33f09f"
+    },
+    "requirements.txt": {
+      "role": "observe",
+      "sha256": "2318a25bef19c4347eb7c9fb05d53d62a8df20db2c5ba606a17b34fcfcdac822",
+      "size": 42709,
+      "normalized_sha256": "2318a25bef19c4347eb7c9fb05d53d62a8df20db2c5ba606a17b34fcfcdac822"
+    },
+    "tests/test_bootstrap_runtime.py": {
+      "role": "index",
+      "sha256": "f94df9ed387df7aa3511f2fbd9427a6d6fcd20a302b7d98e0ab7edbde22eaa3c",
+      "size": 5652,
+      "normalized_sha256": "f94df9ed387df7aa3511f2fbd9427a6d6fcd20a302b7d98e0ab7edbde22eaa3c"
+    },
+    "tests/test_dependency_locks.py": {
+      "role": "index",
+      "sha256": "3e90ef091b41133485e6e0b552036ac9c9ecce02d708601e7007289095a8b7e1",
+      "size": 3857,
+      "normalized_sha256": "3e90ef091b41133485e6e0b552036ac9c9ecce02d708601e7007289095a8b7e1"
+    },
+    "tests/test_environment_validation.py": {
+      "role": "index",
+      "sha256": "65589b4395140a8df779e54089d338b4a7064f95a1193fc593f421449b0bf463",
+      "size": 3866,
+      "normalized_sha256": "65589b4395140a8df779e54089d338b4a7064f95a1193fc593f421449b0bf463"
+    },
+    "tests/test_main_recording.py": {
+      "role": "index",
+      "sha256": "ebacc3de5abe483d75db1c8247a9764a05d566a0601c1963fb2f727bdc5de312",
+      "size": 8093,
+      "normalized_sha256": "ebacc3de5abe483d75db1c8247a9764a05d566a0601c1963fb2f727bdc5de312"
+    },
+    "tests/test_nvidia_runtime.py": {
+      "role": "index",
+      "sha256": "6fb0d2cc4c45b3c59891dc7b20b9b9dee2a98847b12e432a505333158e6981ed",
+      "size": 2318,
+      "normalized_sha256": "6fb0d2cc4c45b3c59891dc7b20b9b9dee2a98847b12e432a505333158e6981ed"
+    },
+    "verify_environment.py": {
+      "role": "index",
+      "sha256": "21602875a3ea31d8da4c9d28212587227b36c3ed2e3e5df458437f9a277161f7",
+      "size": 3452,
+      "normalized_sha256": "21602875a3ea31d8da4c9d28212587227b36c3ed2e3e5df458437f9a277161f7"
+    },
+    "verify_local_install.py": {
+      "role": "index",
+      "sha256": "620f4ff95a04199123d6bb1e3aba890cf639de0b1fb54b7452dcb74af3e766bf",
+      "size": 7337,
+      "normalized_sha256": "620f4ff95a04199123d6bb1e3aba890cf639de0b1fb54b7452dcb74af3e766bf"
+    },
+    "启动_whisper.bat": {
+      "role": "index",
+      "sha256": "7533af386a34fbd592d964335a942c43ef3cdaf316f257d5443e3c044f0cd5f9",
+      "size": 1477,
+      "normalized_sha256": "dcd56928baedc4006cce6e7a461563ded9101de9450ab36f69f0013a4f52cdfe"
+    },
+    "安装环境.bat": {
+      "role": "index",
+      "sha256": "71e22ace394e26762213ee2801bbeb32f2bbd972e2afd961495a24991b2f599b",
+      "size": 3785,
+      "normalized_sha256": "fee933de99b6239d721ca65d4f7f203a79529cbe5d6ab2f84abf8dc150a6fd58"
+    }
+  },
+  "managed_scope": {
+    "version": "managed-scope-baseline/v1",
+    "policy_identity": "9bfc61574487088e23787fa3635dcc9932f96d276b486477b8d6bbb505767145",
+    "observe_change_policy": "review_required",
+    "budget_policy_identity": "15e9b37a6c57e9bf03c9df3d0d049eb5b9a7f5540f9d34960408114e2538a32d",
+    "budget_policy": {
+      "version": "cognition-budget-policy/v1",
+      "mode": "enforce",
+      "whole_index": {
+        "target_tokens": 200000,
+        "warning_tokens": 300000,
+        "max_tokens": 400000
+      },
+      "r": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 25,
+          "max_tokens": 50
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 45,
+          "max_tokens": 90
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 90,
+          "max_tokens": 180
+        }
+      ],
+      "s": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 20,
+          "max_tokens": 40
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 40,
+          "max_tokens": 80
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 100,
+          "max_tokens": 200
+        }
+      ]
+    },
+    "apply_authorization_mode": "auto"
+  }
+}

@@ -27,3 +27,8 @@ models/
 *.log
 desktop.ini
 Thumbs.db
+
+# AOCI agent host integration (machine-bound; do not commit)
+.mcp.json
+.mcp.json.backup.*
+AGENTS.md.backup.*
